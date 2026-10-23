@@ -3,3 +3,4 @@ Flask-Cors
 pandas
 numpy
 pytest
+openai
