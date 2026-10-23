@@ -1,1 +1,5 @@
-
+Flask
+Flask-Cors
+pandas
+numpy
+pytest

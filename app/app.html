@@ -187,27 +187,261 @@ function renderNav(){
   $('loaded').innerHTML='<span class="num" style="color:var(--fg);font-size:14px;word-break:break-all">'+esc(S.loaded)+'</span>';
 }
 
-function renderUpload(){
-  var D=S.data;
-  var samples=SAMPLES.map(function(m,i){return '<button type="button" class="pick" data-sample="'+i+'" aria-pressed="'+(S.sample===i)+'"><span class="dot"></span><span style="flex:1 1 180px"><span style="display:block;font-size:19px;font-weight:700">'+esc(m.name)+'</span><span class="mut" style="display:block;font-size:16px">'+esc(m.meta)+'</span></span><span class="num mut" style="font-size:13px">'+esc(m.tags)+'</span></button>';}).join('');
-  var map=[['summary','Executive Summary KPI Cards'],['forecast','30-Day Cash Trajectory & Risk Band'],['gap','Liquidity Deficit Warning Banner'],['score','Health Score Gauge & Factors'],['receivables_aging','Receivables Aging Breakdown'],['metrics','Key Financial Performance Tiles'],['explanations[]','Risk Driver & Penalty Cards'],['anomalies[]','Ledger Data-Integrity Audit'],['warnings[]','Actionable Mitigation Feed'],['safe_loan_amount','Scenario Bridge Loan Simulator']].map(function(r){return '<div style="display:flex;flex-wrap:wrap;gap:2px 12px"><dt class="num" style="flex:0 0 150px;font-size:13px;color:var(--cyan)">'+r[0]+'</dt><dd class="mut" style="margin:0;flex:1 1 120px">'+r[1]+'</dd></div>';}).join('');
-  var rows=S.preview.map(function(r){return '<tr>'+r.map(function(c,j){return '<td class="num" style="font-size:14px">'+(j===5&&/^(paid|overdue|open|scheduled)$/.test(c)?statusChip(c):esc(c))+'</td>';}).join('')+'</tr>';}).join('');
-  var steps=['File Upload','Secure Storage','Inference Engine','Risk Analysis','Live Dashboard'].map(function(s){return '<div class="step"><div style="font-size:17px;font-weight:700">'+s+'</div><div class="num" style="font-size:12px;color:var(--green);letter-spacing:.1em">READY</div></div>';}).join('<svg width="22" height="12" viewBox="0 0 22 12" fill="none" stroke="#19D3F3" stroke-width="1.6" aria-hidden="true"><path d="M0 6h20M15 1l5 5-5 5"/></svg>');
-  $('v-upload').innerHTML=head(1,'Upload Financial Data','Upload your transaction ledger (CSV) or model diagnostic output (JSON) to run an instant cash-flow early warning analysis.')+
-  '<div class="row" style="align-items:flex-start"><section class="panel" style="flex:2 1 460px;display:flex;flex-direction:column;gap:24px">'+
-  '<div class="dz" id="dz"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#19D3F3" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="filter:drop-shadow(0 0 6px rgba(25,211,243,.7))"><path d="M12 16V4M7 9l5-5 5 5M4 20h16"/></svg><div class="ttl" style="font-size:16px">Drop transaction file here</div><div class="mut">Supports bank CSV statements or diagnostic JSON files</div><button type="button" class="btn ghost" id="browse" style="min-height:44px;padding:0 24px">Browse Files</button><input type="file" id="file-in" accept=".csv,.json,application/json,text/csv" hidden></div>'+
-  '<div><div class="lbl" style="margin-bottom:12px">Or Select Preset Enterprise Profile</div><div style="display:flex;flex-direction:column;gap:8px">'+samples+'</div></div></section>'+
-  '<aside class="panel" style="flex:1 1 340px"><div class="lbl">Payload Schema Map</div><h2 class="ttl" style="margin:8px 0 4px">Contract Specification</h2><p class="mut" style="margin-bottom:16px">Each schema key powers a specific dashboard module.</p><dl style="margin:0;display:flex;flex-direction:column;gap:10px">'+map+'</dl></aside></div>'+
-  '<section class="panel"><div class="lbl" style="margin-bottom:14px">Inference Pipeline</div><div class="steps">'+steps+'</div></section>'+
-  '<section class="panel" style="padding-left:0;padding-right:0;padding-bottom:8px"><div style="padding:0 24px 16px;display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 16px"><h2 class="ttl">Ledger Data Stream Preview</h2><span class="num mut" style="font-size:13px">'+esc(S.previewNote)+'</span></div><div class="scroll"><table><thead><tr>'+S.previewHead.map(function(h){return '<th>'+esc(h)+'</th>';}).join('')+'</tr></thead><tbody>'+rows+'</tbody></table></div></section>'+
-  '<div><button type="button" class="btn" data-go="forecast">Generate Liquidity Forecast for '+esc(D.msme_id.split('-')[0].charAt(0)+D.msme_id.split('-')[0].slice(1).toLowerCase())+'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button></div>';
-  var inp=$('file-in'),dz=$('dz');
-  $('browse').addEventListener('click',function(){inp.click();});
-  inp.addEventListener('change',function(){if(inp.files[0])readFile(inp.files[0]);});
-  ['dragover','dragenter'].forEach(function(e){dz.addEventListener(e,function(ev){ev.preventDefault();dz.classList.add('over');});});
-  ['dragleave','drop'].forEach(function(e){dz.addEventListener(e,function(ev){ev.preventDefault();dz.classList.remove('over');});});
-  dz.addEventListener('drop',function(ev){var f=ev.dataTransfer&&ev.dataTransfer.files[0];if(f)readFile(f);});
+
+function renderUpload() {
+  var D = S.data;
+
+  var samples = SAMPLES.map(function(m, i) {
+    return '<button type="button" class="pick" data-sample="' + i +
+      '" aria-pressed="' + (S.sample === i) + '">' +
+      '<span class="dot"></span>' +
+      '<span style="flex:1 1 180px">' +
+      '<span style="display:block;font-size:19px;font-weight:700">' +
+      esc(m.name) + '</span>' +
+      '<span class="mut" style="display:block;font-size:16px">' +
+      esc(m.meta) + '</span></span>' +
+      '<span class="num mut" style="font-size:13px">' +
+      esc(m.tags) + '</span></button>';
+  }).join('');
+
+  var map = [
+    ['summary', 'Executive Summary KPI Cards'],
+    ['forecast', '30-Day Cash Trajectory & Risk Band'],
+    ['gap', 'Liquidity Deficit Warning Banner'],
+    ['score', 'Health Score Gauge & Factors'],
+    ['receivables_aging', 'Receivables Aging Breakdown'],
+    ['metrics', 'Key Financial Performance Tiles'],
+    ['explanations[]', 'Risk Driver & Penalty Cards'],
+    ['anomalies[]', 'Ledger Data-Integrity Audit'],
+    ['warnings[]', 'Actionable Mitigation Feed'],
+    ['safe_loan_amount', 'Scenario Bridge Loan Simulator']
+  ].map(function(r) {
+    return '<div style="display:flex;flex-wrap:wrap;gap:2px 12px">' +
+      '<dt class="num" style="flex:0 0 150px;font-size:13px;color:var(--cyan)">' +
+      r[0] + '</dt>' +
+      '<dd class="mut" style="margin:0;flex:1 1 120px">' +
+      r[1] + '</dd></div>';
+  }).join('');
+
+  var rows = S.preview.map(function(r) {
+    return '<tr>' + r.map(function(c, j) {
+      return '<td class="num" style="font-size:14px">' +
+        (j === 5 && /^(paid|overdue|open|scheduled)$/.test(c)
+          ? statusChip(c)
+          : esc(c)) +
+        '</td>';
+    }).join('') + '</tr>';
+  }).join('');
+
+  var steps = [
+    'File Upload',
+    'Secure Storage',
+    'Inference Engine',
+    'Risk Analysis',
+    'Live Dashboard'
+  ].map(function(s) {
+    return '<div class="step">' +
+      '<div style="font-size:17px;font-weight:700">' + s + '</div>' +
+      '<div class="num" style="font-size:12px;color:var(--green);letter-spacing:.1em">READY</div>' +
+      '</div>';
+  }).join(
+    '<svg width="22" height="12" viewBox="0 0 22 12" fill="none" stroke="#19D3F3" stroke-width="1.6" aria-hidden="true"><path d="M0 6h20M15 1l5 5-5 5"/></svg>'
+  );
+
+  $('v-upload').innerHTML =
+    head(
+      1,
+      'Upload Financial Data',
+      'Upload your financial records to run a cash-flow early warning analysis.'
+    ) +
+
+    '<div class="row" style="align-items:flex-start">' +
+
+    '<section class="panel" style="flex:2 1 460px;display:flex;flex-direction:column;gap:24px">' +
+
+    // Existing single-file preview area
+    '<div class="dz" id="dz">' +
+      '<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#19D3F3" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+      '<path d="M12 16V4M7 9l5-5 5 5M4 20h16"/>' +
+      '</svg>' +
+      '<div class="ttl" style="font-size:16px">Drop a file here for preview</div>' +
+      '<div class="mut">Preview a CSV statement or load diagnostic JSON</div>' +
+      '<button type="button" class="btn ghost" id="browse" style="min-height:44px;padding:0 24px">Browse Files</button>' +
+      '<input type="file" id="file-in" accept=".csv,.json,application/json,text/csv" hidden>' +
+    '</div>' +
+
+    // New three-file upload section
+    '<div class="panel" style="display:flex;flex-direction:column;gap:12px">' +
+      '<h2 class="ttl">Analyze Financial Records</h2>' +
+      '<p class="mut">Select all three CSV files. The Python backend will validate them and run your existing ML pipeline.</p>' +
+
+      '<label class="lbl" for="transactions-file">1. Bank Transactions CSV</label>' +
+      '<input type="file" id="transactions-file" accept=".csv,text/csv" style="max-width:100%">' +
+
+      '<label class="lbl" for="invoices-file">2. Customer Invoices CSV</label>' +
+      '<input type="file" id="invoices-file" accept=".csv,text/csv" style="max-width:100%">' +
+
+      '<label class="lbl" for="obligations-file">3. Financial Obligations CSV</label>' +
+      '<input type="file" id="obligations-file" accept=".csv,text/csv" style="max-width:100%">' +
+
+      '<button type="button" class="btn" id="analyze-files">Analyze Financial Data</button>' +
+      '<p class="mut" style="font-size:13px;margin:0">For this local prototype, files are sent to your Flask backend at 127.0.0.1:5000.</p>' +
+    '</div>' +
+
+    // Existing preset profiles
+    '<div><div class="lbl" style="margin-bottom:12px">Or Select Preset Enterprise Profile</div>' +
+      '<div style="display:flex;flex-direction:column;gap:8px">' +
+      samples + '</div></div>' +
+
+    '</section>' +
+
+    // Existing schema map
+    '<aside class="panel" style="flex:1 1 340px">' +
+      '<div class="lbl">Payload Schema Map</div>' +
+      '<h2 class="ttl" style="margin:8px 0 4px">Contract Specification</h2>' +
+      '<p class="mut" style="margin-bottom:16px">Each schema key powers a specific dashboard module.</p>' +
+      '<dl style="margin:0;display:flex;flex-direction:column;gap:10px">' +
+      map + '</dl>' +
+    '</aside></div>' +
+
+    // Existing pipeline display
+    '<section class="panel">' +
+      '<div class="lbl" style="margin-bottom:14px">Inference Pipeline</div>' +
+      '<div class="steps">' + steps + '</div>' +
+    '</section>' +
+
+    // Existing ledger preview
+    '<section class="panel" style="padding-left:0;padding-right:0;padding-bottom:8px">' +
+      '<div style="padding:0 24px 16px;display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 16px">' +
+        '<h2 class="ttl">Ledger Data Stream Preview</h2>' +
+        '<span class="num mut" style="font-size:13px">' + esc(S.previewNote) + '</span>' +
+      '</div>' +
+      '<div class="scroll"><table><thead><tr>' +
+        S.previewHead.map(function(h) {
+          return '<th>' + esc(h) + '</th>';
+        }).join('') +
+      '</tr></thead><tbody>' + rows + '</tbody></table></div>' +
+    '</section>' +
+
+    '<div><button type="button" class="btn" data-go="forecast">' +
+      'Generate Liquidity Forecast for ' +
+      esc(D.msme_id.split('-')[0].charAt(0) +
+      D.msme_id.split('-')[0].slice(1).toLowerCase()) +
+      '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+      '<path d="M5 12h14M13 6l6 6-6 6"/>' +
+      '</svg></button></div>';
+
+  // Preserve the existing single-file preview behaviour
+  var inp = $('file-in');
+  var dz = $('dz');
+
+  $('browse').addEventListener('click', function() {
+    inp.click();
+  });
+
+  inp.addEventListener('change', function() {
+    if (inp.files[0]) readFile(inp.files[0]);
+  });
+
+  ['dragover', 'dragenter'].forEach(function(e) {
+    dz.addEventListener(e, function(ev) {
+      ev.preventDefault();
+      dz.classList.add('over');
+    });
+  });
+
+  ['dragleave', 'drop'].forEach(function(e) {
+    dz.addEventListener(e, function(ev) {
+      ev.preventDefault();
+      dz.classList.remove('over');
+    });
+  });
+
+  dz.addEventListener('drop', function(ev) {
+    var f = ev.dataTransfer && ev.dataTransfer.files[0];
+    if (f) readFile(f);
+  });
+
+  // New: send all three CSV files to the Flask API
+  var analyzeBtn = $('analyze-files');
+
+  analyzeBtn.addEventListener('click', function() {
+    var transactions = $('transactions-file').files[0];
+    var invoices = $('invoices-file').files[0];
+    var obligations = $('obligations-file').files[0];
+
+    if (!transactions || !invoices || !obligations) {
+      notice('Please select all three CSV files.', true);
+      return;
+    }
+
+    var selectedFiles = [
+      ['transactions', transactions],
+      ['invoices', invoices],
+      ['obligations', obligations]
+    ];
+
+    for (var i = 0; i < selectedFiles.length; i++) {
+      var file = selectedFiles[i][1];
+
+      if (!/\.csv$/i.test(file.name)) {
+        notice(selectedFiles[i][0] + ' must be a CSV file.', true);
+        return;
+      }
+
+      if (file.size > 10 * 1024 * 1024) {
+        notice(file.name + ' exceeds the 10 MB per-file limit.', true);
+        return;
+      }
+    }
+
+    var form = new FormData();
+    form.append('transactions', transactions);
+    form.append('invoices', invoices);
+    form.append('obligations', obligations);
+
+    analyzeBtn.disabled = true;
+    analyzeBtn.textContent = 'Analyzing...';
+    notice('Sending records to the Python ML pipeline...', false);
+
+    fetch('http://127.0.0.1:5000/api/analyze', {
+      method: 'POST',
+      body: form
+    })
+      .then(function(response) {
+        return response.json().then(function(data) {
+          if (!response.ok) {
+            throw new Error(data.error || 'Analysis failed.');
+          }
+          return data;
+        });
+      })
+      .then(function(result) {
+        S.data = result;
+        S.sample = -1;
+        S.loaded = 'Uploaded financial records';
+        S.loan = null;
+
+        S.preview = [];
+        S.previewNote = 'Analysis completed on uploaded records. Upload preview will be added separately.';
+
+        notice('Financial analysis completed successfully.', false);
+        renderAll();
+      })
+      .catch(function(error) {
+        notice('Upload failed: ' + error.message, true);
+      })
+      .finally(function() {
+        var btn = $('analyze-files');
+
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = 'Analyze Financial Data';
+        }
+      });
+  });
 }
+
 
 /* chart helpers */
 function cashChart(D){
@@ -335,12 +569,30 @@ function readFile(f){
   };
   r.readAsText(f);
 }
-document.addEventListener('click',function(e){
-  var t=e.target.closest('[data-go],[data-sample],[data-loan]');if(!t)return;
-  if(t.dataset.go){go(t.dataset.go);return;}
-  if(t.dataset.sample!=null){var i=+t.dataset.sample,m=SAMPLES[i];S.sample=i;S.data=m.payload;S.loaded=m.file;S.preview=m.preview;S.previewHead=['date','type','counterparty','amount_inr','due_date','status'];S.previewNote=m.file+' · '+m.rows.toLocaleString('en-US')+' total records · 5 sample rows displayed';S.loan=null;notice('');renderAll();return;}
-  if(t.dataset.loan!=null){S.loan=+t.dataset.loan;renderWarnings();}
+
+document.addEventListener('click', function(e) {
+  var t = e.target.closest('[data-go],[data-sample],[data-loan]');
+  if (!t) return;
+
+  if (t.dataset.go) {
+    go(t.dataset.go);
+    return;
+  }
+
+  if (t.dataset.sample != null) {
+    notice(
+      'Demo scenarios are currently unavailable. Please upload your three CSV files and click Analyze.',
+      true
+    );
+    return;
+  }
+
+  if (t.dataset.loan != null) {
+    S.loan = +t.dataset.loan;
+    renderWarnings();
+  }
 });
+
 renderAll();
 var h=(location.hash||'').replace('#','');
 if(['upload','forecast','health','warnings'].indexOf(h)>=0)go(h);else go('upload');

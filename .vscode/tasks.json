@@ -1,0 +1,43 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Live Server: app",
+			"type": "shell",
+			"command": "npx",
+			"args": [
+				"--yes",
+				"live-server",
+				"app",
+				"--host=127.0.0.1",
+				"--port=5500",
+				"--no-browser"
+			],
+			"isBackground": true,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "Backend: Flask API",
+			"type": "shell",
+			"command": "D:\\msme-cashflow-warning\\.venv\\Scripts\\python.exe",
+			"args": [
+				"api.py"
+			],
+			"isBackground": true,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "Start Flask backend",
+			"type": "shell",
+			"command": ".venv\\Scripts\\python.exe",
+			"args": [
+				"api.py"
+			],
+			"isBackground": true,
+			"problemMatcher": [],
+			"group": "build"
+		}
+	]
+}
