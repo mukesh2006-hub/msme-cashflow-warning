@@ -1,0 +1,6 @@
+invoice_id,customer,issue_date,due_date,amount,status,paid_date
+SINV001,Delayed Buyer A,2026-08-01,2026-09-01,80000,open,
+SINV002,Buyer B,2026-09-01,2026-09-20,40000,paid,2026-09-25
+SINV003,Delayed Buyer C,2026-08-15,2026-09-15,60000,open,
+SINV004,Buyer D,2026-09-05,2026-09-25,25000,paid,2026-09-28
+SINV005,Buyer E,2026-10-10,2026-11-05,30000,open,

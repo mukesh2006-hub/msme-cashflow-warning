@@ -1,0 +1,7 @@
+txn_id,date,amount,balance,description,category,counterparty
+s001,2026-10-01,60000,160000,Customer payment,credit,Small Retailer
+s002,2026-10-04,-90000,70000,Inventory purchase,debit,Raw Materials Ltd
+s003,2026-10-08,-25000,45000,Vendor payment,debit,Packaging Supplier
+s003,2026-10-08,-25000,20000,Vendor payment,debit,Packaging Supplier
+s004,2026-10-14,20000,40000,Partial customer payment,credit,Small Retailer
+s005,2026-10-20,-50000,-10000,Payroll,debit,Employees

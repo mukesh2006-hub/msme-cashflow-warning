@@ -1,0 +1,7 @@
+txn_id,date,amount,balance,description,category,counterparty
+h001,2026-10-01,250000,350000,Customer payment,credit,ABC Retail
+h002,2026-10-03,-80000,270000,Raw materials,debit,Steel Supplier
+h003,2026-10-06,120000,390000,Customer payment,credit,XYZ Stores
+h004,2026-10-10,-45000,345000,Electricity bill,debit,Power Company
+h005,2026-10-15,95000,440000,Customer payment,credit,LMN Traders
+h006,2026-10-20,-150000,290000,Payroll,debit,Employees
