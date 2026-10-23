@@ -1,0 +1,414 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Runway Early Warning</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;600&family=Rajdhani:wght@500;600;700&family=Share+Tech+Mono&display=swap">
+<style>
+/* Layout concept: a command-console. Sticky instrument rail on the left, one live panel on the right; every number comes from one JSON payload shaped like the ML contract. */
+:root{
+  --bg:#040A10; --rail:#060E16; --panel-top:#0C1F2C; --panel-bot:#07111A;
+  --line:rgba(25,211,243,.28); --faint:rgba(25,211,243,.14);
+  --cyan:#19D3F3; --cyan-ink:#001A20; --gold:#F5B700; --red:#FF5A52; --red-soft:#FF8A84; --orange:#FF8A3D; --green:#3DDC97;
+  --fg:#D6EEF5; --body:#B9D4DD; --muted:#86A9B6;
+  --f-display:'Orbitron',system-ui,sans-serif; --f-body:'Rajdhani',system-ui,sans-serif; --f-mono:'Share Tech Mono',ui-monospace,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{background:var(--bg)}
+body{margin:0;background-color:var(--bg);background-image:linear-gradient(rgba(25,211,243,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(25,211,243,.05) 1px,transparent 1px);background-size:40px 40px;color:var(--fg);font:500 17px/1.4 var(--f-body);padding-block:16px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+h1,h2,h3,p{margin:0}
+.shell{max-width:1440px;margin:0 auto;display:grid;grid-template-columns:260px minmax(0,1fr);gap:24px;align-items:start}
+.rail{position:sticky;top:16px;background:var(--rail);border:1px solid var(--line);border-radius:4px;padding:20px 14px;display:flex;flex-direction:column;gap:26px}
+.brand{display:flex;align-items:center;gap:12px;padding:0 6px}
+.brand svg{filter:drop-shadow(0 0 6px var(--cyan));flex:none}
+.ttl{font-family:var(--f-display);font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--fg)}
+.lbl{font:400 12px var(--f-mono);letter-spacing:.16em;text-transform:uppercase;color:var(--cyan)}
+.mut{color:var(--muted)}
+.num{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.nav{display:flex;flex-direction:column;gap:6px}
+.nav button{display:flex;align-items:center;gap:10px;min-height:44px;padding:0 12px;border:1px solid transparent;border-radius:2px;background:none;color:var(--fg);font-size:18px;text-align:left;cursor:pointer}
+.nav button:hover{background:rgba(25,211,243,.07)}
+.nav button[aria-current="page"]{background:rgba(25,211,243,.12);border-color:var(--cyan);box-shadow:0 0 12px rgba(25,211,243,.25);color:var(--cyan);font-weight:700}
+.badge{margin-left:auto;background:var(--red);color:#1A0504;font:700 13px var(--f-mono);border-radius:2px;padding:1px 8px}
+.panel{position:relative;background:
+ linear-gradient(var(--cyan),var(--cyan)) top left/16px 2px no-repeat,linear-gradient(var(--cyan),var(--cyan)) top left/2px 16px no-repeat,
+ linear-gradient(var(--cyan),var(--cyan)) top right/16px 2px no-repeat,linear-gradient(var(--cyan),var(--cyan)) top right/2px 16px no-repeat,
+ linear-gradient(var(--cyan),var(--cyan)) bottom left/16px 2px no-repeat,linear-gradient(var(--cyan),var(--cyan)) bottom left/2px 16px no-repeat,
+ linear-gradient(var(--cyan),var(--cyan)) bottom right/16px 2px no-repeat,linear-gradient(var(--cyan),var(--cyan)) bottom right/2px 16px no-repeat,
+ linear-gradient(180deg,var(--panel-top),var(--panel-bot));border:1px solid var(--line);border-radius:4px;box-shadow:0 0 28px rgba(25,211,243,.07) inset;padding:24px;min-width:0}
+.main{display:flex;flex-direction:column;gap:24px;min-width:0}
+.view{display:flex;flex-direction:column;gap:24px;min-width:0}
+.metaline{display:flex;flex-wrap:wrap;gap:6px 24px;font:400 13px var(--f-mono);letter-spacing:.08em;color:var(--muted)}
+.metaline b{font-weight:400;color:var(--cyan)}
+h1.ttl{font-size:clamp(22px,3.4vw,30px);line-height:1.2;margin-top:6px;text-wrap:balance}
+h2.ttl{font-size:16px;text-wrap:balance}
+.lead{font-size:19px;color:var(--muted);max-width:68ch;margin-top:8px}
+.row{display:flex;flex-wrap:wrap;gap:16px}
+.row>*{min-width:0}
+.chip{display:inline-block;border-radius:2px;padding:3px 10px;font:700 12px var(--f-mono);letter-spacing:.12em;text-transform:uppercase;white-space:nowrap}
+.hi{background:var(--red);color:#1A0504}.md{background:var(--gold);color:#1F1600}.lo{background:var(--cyan);color:var(--cyan-ink)}.ok{background:var(--green);color:#03150C}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:48px;padding:0 28px;border-radius:2px;border:1px solid var(--cyan);background:var(--cyan);color:var(--cyan-ink);font:700 17px var(--f-body);letter-spacing:.06em;text-transform:uppercase;cursor:pointer;box-shadow:0 0 22px rgba(25,211,243,.45)}
+.btn.ghost{background:transparent;color:var(--cyan);box-shadow:none}
+.kpi{flex:1 1 220px}
+.kpi .v{font:400 clamp(30px,4vw,40px)/1.1 var(--f-mono);margin-top:10px;text-shadow:0 0 14px rgba(25,211,243,.5)}
+.alert{border:1px solid rgba(255,90,82,.55);border-left:6px solid var(--red);background:linear-gradient(90deg,rgba(255,90,82,.16),rgba(255,90,82,.04));box-shadow:0 0 26px rgba(255,90,82,.15);border-radius:4px;padding:20px 24px;display:flex;flex-wrap:wrap;gap:20px 36px}
+.alert.calm{border-color:rgba(61,220,151,.5);border-left-color:var(--green);background:linear-gradient(90deg,rgba(61,220,151,.14),rgba(61,220,151,.03));box-shadow:none}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:600px}
+th,td{padding:12px 16px;text-align:left;border-bottom:1px solid var(--faint);font-size:16px;vertical-align:top}
+th{color:var(--muted);font:400 12px var(--f-mono);letter-spacing:.12em;text-transform:uppercase}
+.dz{border:1px dashed rgba(25,211,243,.5);border-radius:4px;background:rgba(25,211,243,.04);padding:28px;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center}
+.dz.over{background:rgba(25,211,243,.14);border-style:solid}
+.pick{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;width:100%;min-height:64px;padding:12px 16px;border-radius:2px;border:1px solid var(--line);background:rgba(255,255,255,.02);text-align:left;cursor:pointer}
+.pick[aria-pressed="true"]{background:rgba(25,211,243,.14);box-shadow:inset 0 0 0 1px var(--cyan),0 0 14px rgba(25,211,243,.25)}
+.dot{flex:0 0 18px;width:18px;height:18px;border-radius:50%;border:2px solid var(--cyan);background:var(--panel-bot)}
+.pick[aria-pressed="true"] .dot{background:radial-gradient(circle,var(--cyan) 0 45%,var(--panel-bot) 50%)}
+.steps{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+.step{padding:10px 16px;border:1px solid rgba(25,211,243,.4);border-radius:2px}
+.card{display:flex;flex-direction:column;gap:10px;flex:1 1 380px}
+.bar{height:10px;background:rgba(25,211,243,.1)}
+.bar>i{display:block;height:100%;background:var(--cyan);box-shadow:0 0 10px rgba(25,211,243,.6)}
+.agebar{height:14px;background:rgba(25,211,243,.1)}
+.agebar>i{display:block;height:100%}
+.flows{display:flex;gap:12px;align-items:flex-end;min-width:420px}
+.flows .g{flex:1 1 0;display:flex;flex-direction:column;align-items:center;gap:8px;min-width:0}
+.flows .b{display:flex;align-items:flex-end;gap:6px;height:150px}
+.flows .c{display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:4px;width:30px;height:150px;font:400 12px var(--f-mono)}
+.loan{flex:1 1 64px;min-height:44px;border-radius:2px;border:1px solid var(--cyan);background:transparent;color:var(--cyan);font:700 16px var(--f-mono);cursor:pointer}
+.loan[aria-pressed="true"]{background:var(--cyan);color:var(--cyan-ink);box-shadow:0 0 16px rgba(25,211,243,.5)}
+.wcard{border-left:5px solid var(--cyan);display:flex;flex-direction:column;gap:12px}
+.wcard.high{border-left-color:var(--red)}.wcard.medium{border-left-color:var(--gold)}
+.act{padding:12px 14px;background:rgba(25,211,243,.08);border:1px solid rgba(25,211,243,.3)}
+.notice{padding:12px 16px;border:1px solid rgba(25,211,243,.4);background:rgba(25,211,243,.07);font-size:17px}
+.notice.err{border-color:var(--red);background:rgba(255,90,82,.1);color:var(--red-soft)}
+.pulse{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--red);margin-right:8px;animation:pl 2s ease-in-out infinite}
+@keyframes pl{50%{opacity:.35}}
+@media (prefers-reduced-motion:reduce){.pulse{animation:none}}
+@media (max-width:900px){
+  .shell{grid-template-columns:minmax(0,1fr)}
+  .rail{position:static;padding:16px 12px;gap:16px}
+  .nav{display:grid;grid-template-columns:1fr 1fr}
+  .panel{padding:20px 16px}
+  .alert{padding:16px}
+}
+svg text{font-family:var(--f-mono)}
+</style>
+
+<div class="shell">
+<aside class="rail">
+  <div class="brand">
+    <svg width="36" height="36" viewBox="0 0 36 36" aria-hidden="true"><circle cx="18" cy="18" r="16" fill="none" stroke="#19D3F3" stroke-width="1.5"/><circle cx="18" cy="18" r="10" fill="none" stroke="#19D3F3" stroke-width="1.5" stroke-dasharray="3 3"/><circle cx="18" cy="18" r="4.5" fill="#19D3F3"/></svg>
+    <div><div class="ttl" style="font-size:18px">Runway</div><div class="lbl" style="font-size:10px;color:var(--muted);letter-spacing:.1em">Liquidity Intelligence Radar</div></div>
+  </div>
+  <nav class="nav" aria-label="Pages" id="nav"></nav>
+  <div class="mut" style="font-size:15px;line-height:1.4;border-top:1px solid var(--faint);padding-top:14px"><div class="lbl" style="margin-bottom:6px">Active Data Stream</div><div id="loaded"></div></div>
+</aside>
+<main class="main">
+  <div id="notice" role="status" aria-live="polite" hidden></div>
+  <section class="view" id="v-upload"></section>
+  <section class="view" id="v-forecast" hidden></section>
+  <section class="view" id="v-health" hidden></section>
+  <section class="view" id="v-warnings" hidden></section>
+</main>
+</div>
+
+<script>
+(function(){
+var MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+var BUFFER=100000; /* minimum cash buffer in rupees, used by the chart and the what-if panel */
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function fmtL(v,d){return (v<0?'–':'')+'₹'+Math.abs(v/100000).toFixed(d==null?2:d)+' L';}
+function fmtDate(s){var p=s.split('-');return MONTHS[+p[1]-1]+' '+(+p[2]);}
+function fmtRange(a,b){if(a===b)return fmtDate(a);var x=a.split('-'),y=b.split('-');return fmtDate(a)+'–'+(x[1]===y[1]?(+y[2]):fmtDate(b));}
+function addDays(s,n){var p=s.split('-').map(Number);return new Date(Date.UTC(p[0],p[1]-1,p[2]+n)).toISOString().slice(0,10);}
+
+/* ---------- sample payloads (same shape the ML service returns) ---------- */
+function build(o){
+  var n=31,bal=[],lo=[],up=[],dates=[],inf=[],out=[],i,k,a,b,t,v,d;
+  for(i=0;i<n;i++){
+    k=0;while(k<o.pts.length-2&&o.pts[k+1][0]<=i)k++;
+    a=o.pts[k];b=o.pts[k+1];
+    t=Math.max(0,Math.min(1,(i-a[0])/(b[0]-a[0])));
+    v=(a[1]+(b[1]-a[1])*t)*1e5;d=(0.15+0.035*i)*o.band*1e5;
+    bal.push(Math.round(v));lo.push(Math.round(v-d));up.push(Math.round(v+d));dates.push(addDays(o.start,i));
+  }
+  var sizes=[7,7,7,7,3],day=0;
+  sizes.forEach(function(sz,w){for(var j=0;j<sz;j++){inf[day]=Math.round(o.inT[w]*1e5/sz);out[day]=Math.round(o.outT[w]*1e5/sz);day++;}});
+  if(o.emiDay!=null)out[o.emiDay]+=o.emiAmt;
+  return {dates:dates,balance:bal,lower:lo,upper:up,inflows:inf,outflows:out};
+}
+var SAMPLES=[
+ {name:'Sharma Textiles',meta:'Textiles · Surat',tags:'Late payers · EMI ₹1.85 L due Nov 5',file:'sharma_textiles_oct2026.csv',rows:1240,
+  preview:[['2026-11-05','emi','Bank term loan','185000','2026-11-05','scheduled'],['2026-10-20','expense','Salaries','310000','2026-10-20','paid'],['2026-10-14','expense','Rajesh Yarn Traders','240000','2026-10-14','paid'],['2026-10-01','invoice','Metro Retail Pvt Ltd','135000','2026-10-31','open'],['2026-08-07','invoice','Gupta Garments','190000','2026-09-06','overdue']],
+  payload:{msme_id:'SHARMA-TEX-014',as_of:'2026-10-23',currency:'INR',
+   summary:{current_balance:480000,health_score:38,risk_level:'high'},
+   forecast:build({start:'2026-10-23',band:1,pts:[[0,4.8],[3,4.5],[6,4.1],[8,4.7],[10,3.9],[12,3.3],[13,1.45],[15,1.0],[17,0.3],[19,-0.6],[21,0.2],[23,1.1],[26,0.8],[30,1.9]],inT:[2.0,2.3,1.6,3.4,1.9],outT:[2.7,3.1,3.45,2.1,0.9],emiDay:13,emiAmt:185000}),
+   gap:{has_gap:true,first_gap_date:'2026-11-10',min_balance:-60000,gap_amount:60000,causes:['EMI of ₹1.85 L is paid on Nov 5','Gupta Garments’ ₹1.9 L is 47 days late','40% of receivables are 30+ days late']},
+   score:{total:38,previous:60,band:'At risk',sub_scores:{'Liquidity runway':{score:9,weight:30,detail:'Cash covers about 10 days of outflows.'},'Receivables quality':{score:8,weight:25,detail:'40% of receivables are 30+ days late.'},'Debt service':{score:9,weight:20,detail:'The ₹1.85 L EMI on Nov 5 equals 39% of today’s cash.'},'Cash volatility':{score:7,weight:15,detail:'Daily balance swings widened after the Oct 14 purchase.'},'Payables discipline':{score:5,weight:10,detail:'Suppliers are paid on time, but little cash buffer is left.'}}},
+   receivables_aging:{'0-30':600000,'31-60':240000,'61-90':100000,'90+':60000},
+   metrics:{dso_days:58,top_customer_share:0.34,cash_buffer_days:10,dscr:0.92,avg_payment_delay_days:19},
+   explanations:[{severity:'high',title:'Late receivables',message:'Score dropped because 40% of receivables are 30+ days late.',metric:'receivables_30plus_pct',value:'40%'},{severity:'high',title:'EMI against cash',message:'The ₹1.85 L EMI due Nov 5 takes 39% of today’s cash.',metric:'emi_to_cash_ratio',value:'39%'},{severity:'medium',title:'Debt service is thin',message:'Cash from operations does not fully cover the EMI, so a delayed receipt becomes a gap.',metric:'dscr',value:'0.92×'},{severity:'low',title:'Customer concentration',message:'One customer, Metro Retail, makes up about a third of receivables.',metric:'top_customer_share',value:'34%'}],
+   anomalies:[{type:'expense_spike',severity:'medium',ref_id:'TXN-10482',message:'₹2.40 L paid to Rajesh Yarn Traders on Oct 14 is 2.1× the 90-day average of ₹1.14 L.'},{type:'duplicate_invoice',severity:'low',ref_id:'INV-2291',message:'Metro Retail ₹1.35 L appears twice with the same date and amount. The forecast counts it once.'},{type:'missing_due_date',severity:'low',ref_id:'INV-2307',message:'A ₹0.40 L invoice has no due date, so net 30 was assumed.'}],
+   warnings:[{type:'liquidity_gap',severity:'high',date:'2026-11-10',message:'Balance is projected to fall to –₹0.60 L. The Nov 5 EMI lands before Gupta Garments’ ₹1.9 L payment, which is already 47 days late.',action:'Ask Gupta Garments for a part-payment this week, or arrange a bridge loan before Nov 8.'},{type:'emi_due',severity:'high',date:'2026-11-05',message:'The ₹1.85 L EMI takes 39% of cash and leaves ₹1.45 L. The balance slips under the ₹1.0 L buffer by Nov 8.',action:'Confirm the debit date with the bank and keep ₹1.85 L set aside until it clears.'},{type:'receivable_overdue',severity:'medium',date:'2026-10-23',message:'₹4.0 L is 31+ days overdue: Gupta Garments ₹1.9 L (47 days), Nair Retail ₹1.0 L (68 days), Patel Traders ₹0.6 L (96 days) and ₹0.5 L from others.',action:'Send reminders today and offer a small settlement discount for payment within a week.'},{type:'customer_concentration',severity:'low',date:'2026-10-23',message:'Metro Retail makes up 34% of receivables, so one late payment moves the whole forecast.',action:'Spread new orders across customers and avoid extending more credit to Metro Retail.'}],
+   safe_loan_amount:160000}},
+ {name:'Lakshmi Packaging',meta:'Packaging · Chennai',tags:'Healthy cash position',file:'lakshmi_packaging_oct2026.csv',rows:980,
+  preview:[['2026-10-21','invoice','Coastal Foods Ltd','420000','2026-11-20','open'],['2026-10-18','expense','Corrugated board supplier','310000','2026-10-18','paid'],['2026-10-15','invoice','Seshadri Pharma','265000','2026-11-14','open'],['2026-10-10','expense','Salaries','380000','2026-10-10','paid'],['2026-09-22','invoice','Greenleaf Exports','180000','2026-10-22','overdue']],
+  payload:{msme_id:'LAKSHMI-PKG-007',as_of:'2026-10-23',currency:'INR',
+   summary:{current_balance:850000,health_score:82,risk_level:'low'},
+   forecast:build({start:'2026-10-23',band:0.6,pts:[[0,8.5],[7,8.9],[13,8.1],[20,9.0],[30,10.2]],inT:[6.1,6.4,6.0,6.9,3.1],outT:[5.9,6.1,6.4,6.4,2.0],emiDay:null}),
+   gap:{has_gap:false,first_gap_date:null,min_balance:810000,gap_amount:0,causes:[]},
+   score:{total:82,band:'Healthy',sub_scores:{'Liquidity runway':{score:26,weight:30,detail:'Cash covers about 48 days of outflows.'},'Receivables quality':{score:21,weight:25,detail:'Only 7.5% of receivables are 30+ days old.'},'Debt service':{score:16,weight:20,detail:'Operations cover the EMI almost twice over.'},'Cash volatility':{score:11,weight:15,detail:'Balances move within a narrow band.'},'Payables discipline':{score:8,weight:10,detail:'Suppliers are paid on or before the due date.'}}},
+   receivables_aging:{'0-30':740000,'31-60':50000,'61-90':10000,'90+':0},
+   metrics:{dso_days:31,top_customer_share:0.22,cash_buffer_days:48,dscr:1.85,avg_payment_delay_days:4},
+   explanations:[{severity:'low',title:'Collections are prompt',message:'Only 7.5% of receivables are 30+ days old.',metric:'receivables_30plus_pct',value:'7.5%'},{severity:'low',title:'Strong debt cover',message:'A DSCR of 1.85× means operations cover the EMI almost twice over.',metric:'dscr',value:'1.85×'},{severity:'low',title:'Healthy cash buffer',message:'Cash covers about 48 days of outflows.',metric:'cash_buffer_days',value:'48'}],
+   anomalies:[],
+   warnings:[{type:'seasonal_demand',severity:'low',date:'2026-11-18',message:'Order intake has dipped about 12% in this week in each of the last two years.',action:'Plan raw-material purchases a week later to protect cash.'}],
+   safe_loan_amount:null}}
+];
+
+/* ---------- state ---------- */
+var S={view:'upload',sample:0,data:SAMPLES[0].payload,loaded:SAMPLES[0].file,preview:SAMPLES[0].preview,previewHead:['date','type','counterparty','amount_inr','due_date','status'],previewNote:'sharma_textiles_oct2026.csv · 1,240 rows · 5 shown',loan:null};
+var VIEWS=[['upload','Upload Data','M12 16V4M7 9l5-5 5 5M4 20h16'],['forecast','Cash Forecast','M3 17l5-5 4 3 8-9M3 21h18'],['health','Health Index','M4 16a8 8 0 1 1 16 0M12 16l4-5'],['warnings','Risk Alerts','M12 4l9 16H3zM12 10v4M12 17v.5']];
+var SEV={high:'hi',medium:'md',low:'lo'};
+var $=function(id){return document.getElementById(id);};
+
+function head(step,title,sub){var D=S.data;return '<header><div class="metaline"><span>MSME_ID <b>'+esc(D.msme_id)+'</b></span><span>AS_OF <b>'+esc(D.as_of)+'</b></span><span>CURRENCY <b>'+esc(D.currency)+'</b></span></div><div class="lbl" style="margin-top:20px">Step '+step+' of 4</div><h1 class="ttl">'+title+'</h1><p class="lead">'+sub+'</p></header>';}
+function sevChip(s){return '<span class="chip '+(SEV[s]||'lo')+'">'+esc(s.charAt(0).toUpperCase()+s.slice(1))+'</span>';}
+function statusChip(s){var m={paid:'ok',overdue:'hi',open:'lo',scheduled:'md'};return '<span class="chip '+(m[s]||'lo')+'" style="font-size:11px">'+esc(s)+'</span>';}
+function bandClass(b){return b==='Healthy'?'ok':b==='Watch'?'md':'hi';}
+function bandColor(b){return b==='Healthy'?'#3DDC97':b==='Watch'?'#F5B700':'#FF5A52';}
+
+/* ---------- views ---------- */
+function renderNav(){
+  $('nav').innerHTML=VIEWS.map(function(v){
+    return '<button type="button" data-go="'+v[0]+'"'+(S.view===v[0]?' aria-current="page"':'')+'><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="'+v[2]+'"/></svg>'+v[1]+(v[0]==='warnings'?'<span class="badge">'+S.data.warnings.length+'</span>':'')+'</button>';
+  }).join('');
+  $('loaded').innerHTML='<span class="num" style="color:var(--fg);font-size:14px;word-break:break-all">'+esc(S.loaded)+'</span>';
+}
+
+function renderUpload(){
+  var D=S.data;
+  var samples=SAMPLES.map(function(m,i){return '<button type="button" class="pick" data-sample="'+i+'" aria-pressed="'+(S.sample===i)+'"><span class="dot"></span><span style="flex:1 1 180px"><span style="display:block;font-size:19px;font-weight:700">'+esc(m.name)+'</span><span class="mut" style="display:block;font-size:16px">'+esc(m.meta)+'</span></span><span class="num mut" style="font-size:13px">'+esc(m.tags)+'</span></button>';}).join('');
+  var map=[['summary','Executive Summary KPI Cards'],['forecast','30-Day Cash Trajectory & Risk Band'],['gap','Liquidity Deficit Warning Banner'],['score','Health Score Gauge & Factors'],['receivables_aging','Receivables Aging Breakdown'],['metrics','Key Financial Performance Tiles'],['explanations[]','Risk Driver & Penalty Cards'],['anomalies[]','Ledger Data-Integrity Audit'],['warnings[]','Actionable Mitigation Feed'],['safe_loan_amount','Scenario Bridge Loan Simulator']].map(function(r){return '<div style="display:flex;flex-wrap:wrap;gap:2px 12px"><dt class="num" style="flex:0 0 150px;font-size:13px;color:var(--cyan)">'+r[0]+'</dt><dd class="mut" style="margin:0;flex:1 1 120px">'+r[1]+'</dd></div>';}).join('');
+  var rows=S.preview.map(function(r){return '<tr>'+r.map(function(c,j){return '<td class="num" style="font-size:14px">'+(j===5&&/^(paid|overdue|open|scheduled)$/.test(c)?statusChip(c):esc(c))+'</td>';}).join('')+'</tr>';}).join('');
+  var steps=['File Upload','Secure Storage','Inference Engine','Risk Analysis','Live Dashboard'].map(function(s){return '<div class="step"><div style="font-size:17px;font-weight:700">'+s+'</div><div class="num" style="font-size:12px;color:var(--green);letter-spacing:.1em">READY</div></div>';}).join('<svg width="22" height="12" viewBox="0 0 22 12" fill="none" stroke="#19D3F3" stroke-width="1.6" aria-hidden="true"><path d="M0 6h20M15 1l5 5-5 5"/></svg>');
+  $('v-upload').innerHTML=head(1,'Upload Financial Data','Upload your transaction ledger (CSV) or model diagnostic output (JSON) to run an instant cash-flow early warning analysis.')+
+  '<div class="row" style="align-items:flex-start"><section class="panel" style="flex:2 1 460px;display:flex;flex-direction:column;gap:24px">'+
+  '<div class="dz" id="dz"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#19D3F3" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="filter:drop-shadow(0 0 6px rgba(25,211,243,.7))"><path d="M12 16V4M7 9l5-5 5 5M4 20h16"/></svg><div class="ttl" style="font-size:16px">Drop transaction file here</div><div class="mut">Supports bank CSV statements or diagnostic JSON files</div><button type="button" class="btn ghost" id="browse" style="min-height:44px;padding:0 24px">Browse Files</button><input type="file" id="file-in" accept=".csv,.json,application/json,text/csv" hidden></div>'+
+  '<div><div class="lbl" style="margin-bottom:12px">Or Select Preset Enterprise Profile</div><div style="display:flex;flex-direction:column;gap:8px">'+samples+'</div></div></section>'+
+  '<aside class="panel" style="flex:1 1 340px"><div class="lbl">Payload Schema Map</div><h2 class="ttl" style="margin:8px 0 4px">Contract Specification</h2><p class="mut" style="margin-bottom:16px">Each schema key powers a specific dashboard module.</p><dl style="margin:0;display:flex;flex-direction:column;gap:10px">'+map+'</dl></aside></div>'+
+  '<section class="panel"><div class="lbl" style="margin-bottom:14px">Inference Pipeline</div><div class="steps">'+steps+'</div></section>'+
+  '<section class="panel" style="padding-left:0;padding-right:0;padding-bottom:8px"><div style="padding:0 24px 16px;display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 16px"><h2 class="ttl">Ledger Data Stream Preview</h2><span class="num mut" style="font-size:13px">'+esc(S.previewNote)+'</span></div><div class="scroll"><table><thead><tr>'+S.previewHead.map(function(h){return '<th>'+esc(h)+'</th>';}).join('')+'</tr></thead><tbody>'+rows+'</tbody></table></div></section>'+
+  '<div style="display:flex;gap:10px;flex-wrap:wrap"><button type="button" class="btn" data-go="forecast">Generate Liquidity Forecast for '+esc(D.msme_id.split('-')[0].charAt(0)+D.msme_id.split('-')[0].slice(1).toLowerCase())+'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button><button type="button" class="btn" id="aws-test-btn">Run Cash-Flow Analysis</button></div>';
+  var inp=$('file-in'),dz=$('dz');
+  $('browse').addEventListener('click',function(){inp.click();});
+  inp.addEventListener('change',function(){if(inp.files[0])readFile(inp.files[0]);});
+  ['dragover','dragenter'].forEach(function(e){dz.addEventListener(e,function(ev){ev.preventDefault();dz.classList.add('over');});});
+  ['dragleave','drop'].forEach(function(e){dz.addEventListener(e,function(ev){ev.preventDefault();dz.classList.remove('over');});});
+  dz.addEventListener('drop',function(ev){var f=ev.dataTransfer&&ev.dataTransfer.files[0];if(f)readFile(f);});
+}
+
+/* chart helpers */
+function cashChart(D){
+  var F=D.forecast,n=F.balance.length,W=780,x0=60,x1=740,y0=20,y1=240,stepX=(x1-x0)/(n-1);
+  var lo=Math.min(0,Math.min.apply(null,F.lower)/1e5),hi=Math.max.apply(null,F.upper)/1e5;
+  var steps=[0.5,1,2,2.5,5,10,20,50],st=100,i;for(i=0;i<steps.length;i++){if((hi-lo)/steps[i]<=6){st=steps[i];break;}}
+  var mn=Math.floor(lo/st)*st,mx=Math.ceil(hi/st)*st;
+  function X(i){return x0+i*stepX;}function Y(v){return y0+(mx-v/1e5)/(mx-mn)*(y1-y0);}
+  var s='<defs><filter id="glow" x="-5%" y="-20%" width="110%" height="140%"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>';
+  var neg=[];F.balance.forEach(function(v,i){if(v<0)neg.push(i);});
+  if(neg.length){var a=X(neg[0])-stepX/2,b=X(neg[neg.length-1])+stepX/2;s+='<rect x="'+a+'" y="'+y0+'" width="'+(b-a)+'" height="'+(y1-y0)+'" fill="rgba(255,90,82,.16)"/>';}
+  for(var t=mn;t<=mx+1e-9;t+=st){var yy=Y(t*1e5);s+='<line x1="'+x0+'" y1="'+yy+'" x2="'+x1+'" y2="'+yy+'" stroke="'+(t===0?'rgba(214,238,245,.55)':'rgba(25,211,243,.14)')+'" stroke-width="'+(t===0?1.5:1)+'"/><text x="52" y="'+(yy+4)+'" text-anchor="end" font-size="12" fill="#86A9B6">'+(t===0?'₹0':(t<0?'–':'')+'₹'+Math.abs(Math.round(t*10)/10)+' L')+'</text>';}
+  var up=F.upper.map(function(v,i){return X(i).toFixed(1)+','+Y(v).toFixed(1);}),dn=F.lower.map(function(v,i){return X(i).toFixed(1)+','+Y(v).toFixed(1);}).reverse();
+  s+='<polygon points="'+up.join(' ')+' '+dn.join(' ')+'" fill="rgba(25,211,243,.14)" stroke="rgba(25,211,243,.4)"/>';
+  if(BUFFER/1e5>=mn&&BUFFER/1e5<=mx){var by=Y(BUFFER);s+='<line x1="'+x0+'" y1="'+by+'" x2="'+x1+'" y2="'+by+'" stroke="#F5B700" stroke-width="2" stroke-dasharray="6 4"/><text x="'+(x1)+'" y="'+(by-6)+'" text-anchor="end" font-size="13" font-weight="700" fill="#F5B700">Buffer ₹1.0 L</text>';}
+  for(i=0;i<n;i+=7){s+='<text x="'+X(i)+'" y="258" text-anchor="middle" font-size="12" fill="#86A9B6">'+fmtDate(F.dates[i])+'</text>';}
+  s+='<polyline points="'+F.balance.map(function(v,i){return X(i).toFixed(1)+','+Y(v).toFixed(1);}).join(' ')+'" fill="none" stroke="#19D3F3" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" filter="url(#glow)"/>';
+  var emi=D.warnings.filter(function(w){return w.type==='emi_due';})[0];
+  if(emi){var ei=F.dates.indexOf(emi.date);if(ei>0){var d=F.balance[ei]-F.balance[ei-1],ex=X(ei),ey=Y(F.balance[ei]);s+='<circle cx="'+ex+'" cy="'+ey+'" r="5" fill="#07111A" stroke="#F5B700" stroke-width="2.5"/><text x="'+(ex+11)+'" y="'+(ey-11)+'" font-size="13" font-weight="700" fill="#F5B700">EMI '+fmtL(d)+'</text>';}}
+  var mi=0;F.balance.forEach(function(v,i){if(v<F.balance[mi])mi=i;});
+  var mxp=X(mi),myp=Y(F.balance[mi]),lowNeg=F.balance[mi]<0,flip=mxp>640;
+  s+='<circle cx="'+mxp+'" cy="'+myp+'" r="6" fill="'+(lowNeg?'#FF5A52':'#19D3F3')+'" stroke="#07111A" stroke-width="2"/><text x="'+(flip?mxp-11:mxp+11)+'" y="'+(myp+(lowNeg?20:-12))+'" text-anchor="'+(flip?'end':'start')+'" font-size="13" font-weight="700" fill="'+(lowNeg?'#FF8A84':'#19D3F3')+'">Low '+fmtL(F.balance[mi])+'</text>';
+  if(neg.length){var cx=(X(neg[0])+X(neg[neg.length-1]))/2;s+='<text x="'+cx+'" y="38" text-anchor="middle" font-size="13" font-weight="700" fill="#FF8A84">Gap</text><text x="'+cx+'" y="53" text-anchor="middle" font-size="12" fill="#FF8A84">'+fmtRange(F.dates[neg[0]],F.dates[neg[neg.length-1]])+'</text>';}
+  var label='Cash balance line chart over '+n+' days from '+fmtDate(F.dates[0])+'. Starts at '+fmtL(F.balance[0])+', lowest point '+fmtL(F.balance[mi])+' on '+fmtDate(F.dates[mi])+', ends at '+fmtL(F.balance[n-1])+'.';
+  return '<svg viewBox="0 0 '+W+' 270" style="width:100%;height:auto;display:block" role="img" aria-label="'+esc(label)+'">'+s+'</svg>';
+}
+function flowsChart(D){
+  var F=D.forecast,n=F.dates.length,wk=[],i;
+  for(i=0;i<n;i+=7){var e=Math.min(n,i+7),a=0,b=0;for(var j=i;j<e;j++){a+=F.inflows[j];b+=F.outflows[j];}wk.push({from:F.dates[i],to:F.dates[e-1],a:a,b:b});}
+  var m=Math.max.apply(null,wk.map(function(w){return Math.max(w.a,w.b);}))||1;
+  return '<div class="scroll"><div class="flows">'+wk.map(function(w){var net=w.a-w.b;return '<div class="g"><div class="b"><div class="c"><span>'+(w.a/1e5).toFixed(1)+'</span><div style="width:30px;height:'+Math.max(2,Math.round(115*w.a/m))+'px;background:#19D3F3"></div></div><div class="c"><span>'+(w.b/1e5).toFixed(1)+'</span><div style="width:30px;height:'+Math.max(2,Math.round(115*w.b/m))+'px;background:#F5B700"></div></div></div><div class="num mut" style="font-size:12px;text-align:center">'+fmtRange(w.from,w.to)+'</div><div class="num" style="font-size:13px;color:'+(net<0?'#FF8A84':'#3DDC97')+'">net '+(net<0?'–':'+')+Math.abs(net/1e5).toFixed(2).replace(/\.?0+$/,'')+'</div></div>';}).join('')+'</div></div>';
+}
+function sum(a){return a.reduce(function(x,y){return x+y;},0);}
+
+function renderForecast(){
+  var D=S.data,sm=D.summary,g=D.gap,F=D.forecast;
+  var kpi='<div class="row"><div class="panel kpi"><div class="lbl">Current Balance</div><div class="v">'+fmtL(sm.current_balance)+'</div><div class="mut">Closing balance as of '+fmtDate(D.as_of)+'</div></div>'+
+   '<div class="panel kpi"><div class="lbl">Financial Health Score</div><div style="display:flex;align-items:baseline;gap:10px;margin-top:10px"><span class="num" style="font-size:40px;color:'+bandColor(D.score.band)+'">'+sm.health_score+'</span><span class="num mut">/ 100</span></div><div style="margin-top:6px"><span class="chip '+bandClass(D.score.band)+'">'+esc(D.score.band)+'</span></div></div>'+
+   '<div class="panel kpi"><div class="lbl">Risk Classification</div><div class="ttl" style="font-size:34px;margin-top:14px;color:'+bandColor(D.score.band)+'">'+esc(D.score.band)+'</div><div class="mut">'+(g.has_gap?'Deficit projected within 30 days':'No deficit projected within 30 days')+'</div></div></div>';
+  var banner=g.has_gap?
+   '<section class="alert" role="alert"><div style="flex:1 1 300px"><div style="display:flex;align-items:center;gap:10px"><span class="pulse"></span><h2 class="ttl" style="font-size:17px;color:#FF8A84">Liquidity Deficit Detected</h2></div><div style="display:flex;flex-wrap:wrap;gap:16px 28px;margin-top:16px"><div><div class="lbl mut" style="color:var(--muted)">first_gap_date</div><div class="num" style="font-size:22px;margin-top:4px">'+fmtDate(g.first_gap_date)+'</div></div><div><div class="lbl" style="color:var(--muted)">min_balance</div><div class="num" style="font-size:22px;margin-top:4px;color:#FF8A84">'+fmtL(g.min_balance)+'</div></div><div><div class="lbl" style="color:var(--muted)">gap_amount</div><div class="num" style="font-size:22px;margin-top:4px;color:#FF8A84">'+fmtL(g.gap_amount)+'</div></div></div></div><div style="flex:1 1 320px"><div class="lbl" style="color:var(--muted)">Primary Deficit Drivers</div><ul style="margin:8px 0 0;padding-left:20px;font-size:18px;line-height:1.5">'+g.causes.map(function(c){return '<li>'+esc(c)+'</li>';}).join('')+'</ul><button type="button" class="btn ghost" data-go="warnings" style="border:0;box-shadow:none;padding:0;margin-top:8px;min-height:44px;background:none">View Mitigation Options &rarr;</button></div></section>':
+   '<section class="alert calm"><div><h2 class="ttl" style="font-size:17px;color:var(--green)">Optimal Liquidity Maintained</h2><p style="margin-top:8px;font-size:18px">The cash balance remains positive for the next 30 days. Lowest projected balance: <span class="num">'+fmtL(Math.min.apply(null,F.balance))+'</span>.</p></div></section>';
+  var ag=D.receivables_aging,keys=Object.keys(ag),tot=sum(keys.map(function(k){return ag[k];})),mxa=Math.max.apply(null,keys.map(function(k){return ag[k];}))||1,cols=['#19D3F3','#F5B700','#FF8A3D','#FF5A52'];
+  var late=tot?(tot-ag[keys[0]])/tot:0,lateAmt=tot-ag[keys[0]];
+  var agingHtml=keys.map(function(k,i){return '<div style="display:flex;align-items:center;gap:12px"><div class="num" style="flex:0 0 66px;font-size:13px">'+esc(k)+'</div><div class="agebar" style="flex:1 1 auto"><i style="width:'+Math.round(100*ag[k]/mxa)+'%;background:'+cols[i%4]+'"></i></div><div class="num" style="flex:0 0 66px;text-align:right;font-size:15px">'+fmtL(ag[k],1)+'</div></div>';}).join('');
+  $('v-forecast').innerHTML=head(2,'30-Day Liquidity Outlook','Projected daily cash balance with confidence intervals, scheduled debt obligations, and weekly net cash movement.')+kpi+banner+
+  '<section class="panel"><div style="display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:8px 24px;margin-bottom:12px"><h2 class="ttl">Projected Cash Trajectory</h2><div class="mut" style="display:flex;flex-wrap:wrap;gap:8px 20px;font-size:15px"><span>▬ Projected Balance</span><span style="color:rgba(25,211,243,.9)">▮ Confidence Interval Range</span><span style="color:#F5B700">┅ Safety Buffer (₹1.0 L)</span><span style="color:#FF8A84">▮ Deficit Period</span></div></div>'+cashChart(D)+'</section>'+
+  '<div class="row" style="align-items:flex-start"><section class="panel" style="flex:2 1 460px"><div style="display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:8px 24px"><h2 class="ttl">Weekly Cash Flow Movement</h2><div class="mut" style="display:flex;gap:18px;font-size:15px"><span><b style="color:#19D3F3">■</b> Inflows</span><span><b style="color:#F5B700">■</b> Outflows</span></div></div><p class="mut" style="margin:4px 0 20px">Values in ₹ Lakhs per week. Period totals: '+fmtL(sum(F.inflows),1)+' inflows, '+fmtL(sum(F.outflows),1)+' outflows.</p>'+flowsChart(D)+'</section>'+
+  '<section class="panel" style="flex:1 1 340px"><h2 class="ttl">Receivables Aging Distribution</h2><p class="mut" style="margin:4px 0 20px">'+fmtL(tot,1)+' total outstanding by payment terms</p><div style="display:flex;flex-direction:column;gap:18px">'+agingHtml+'</div><div style="margin-top:22px;padding:12px 16px;border:1px solid rgba(245,183,0,.5);background:rgba(245,183,0,.08);color:#F5D36B"><b>'+(Math.round(late*1000)/10)+'% of total receivables</b> ('+fmtL(lateAmt,1)+' of '+fmtL(tot,1)+') are 30+ days overdue.</div></section></div>';
+}
+
+function renderHealth(){
+  var D=S.data,sc=D.score,m=D.metrics,col=bandColor(sc.band);
+  var subs=Object.keys(sc.sub_scores).map(function(k){var s=sc.sub_scores[k],weight=s.weight<=1?s.weight*100:s.weight,score=s.weight<=1?s.score:100*s.score/s.weight;return '<div><div style="display:flex;justify-content:space-between;gap:12px;align-items:baseline"><span style="font-size:19px;font-weight:700">'+esc(k)+'</span><span class="num">'+Math.round(score)+' / 100 · '+Math.round(weight)+'% weight</span></div><div class="bar" style="margin-top:6px"><i style="width:'+Math.min(100,Math.max(0,Math.round(score)))+'%"></i></div><div class="mut" style="margin-top:6px;font-size:16px">'+esc(s.detail)+'</div></div>';}).join('');
+  var bands=[['At risk · under 50','At risk'],['Watch · 50–74','Watch'],['Healthy · 75+','Healthy']].map(function(b){var on=sc.band===b[1];return '<div style="display:flex;justify-content:space-between;gap:12px;padding:8px 12px;border:1px solid '+(on?bandColor(b[1]):'var(--faint)')+';'+(on?'background:rgba(255,255,255,.06);font-weight:700':'color:var(--muted)')+'"><span>'+b[0]+'</span>'+(on?'<span class="num" style="font-size:13px">CURRENT TIER</span>':'')+'</div>';}).join('');
+  var tiles=[['dso_days',m.dso_days,'Days Sales Outstanding (DSO)',false],['top_customer_share',Math.round(m.top_customer_share*100)+'%','Receivables Share of Largest Customer',m.top_customer_share>0.5],['cash_buffer_days',m.cash_buffer_days,'Days of Operating Outflows Covered',m.cash_buffer_days<15],['dscr',m.dscr.toFixed(2)+'×','Debt Service Coverage Ratio (DSCR)',m.dscr<1],['avg_payment_delay_days',m.avg_payment_delay_days,'Average Customer Payment Delay',m.avg_payment_delay_days>15]].map(function(t){return '<div class="panel" style="flex:1 1 190px;padding:18px"><div class="lbl" style="color:var(--muted)">'+t[0]+'</div><div class="num" style="font-size:34px;margin-top:8px;color:'+(t[3]?'#FF8A84':'var(--fg)')+';text-shadow:0 0 12px '+(t[3]?'rgba(255,90,82,.45)':'rgba(25,211,243,.45)')+'">'+t[1]+'</div><div class="mut" style="font-size:16px">'+t[2]+'</div></div>';}).join('');
+  var ex=D.explanations.map(function(e){return '<div class="panel card" style="padding:20px"><div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px">'+sevChip(e.severity)+'<span class="num mut" style="font-size:13px">'+esc(e.metric)+' <span style="color:var(--fg);font-size:16px">'+esc(e.value)+'</span></span></div><div style="font-size:20px;font-weight:700">'+esc(e.title)+'</div><div style="font-size:18px;color:var(--body)">'+esc(e.message)+'</div></div>';}).join('');
+  $('v-health').innerHTML=head(3,'Financial Health Index','A weighted diagnostic score (0–100) evaluating liquidity runway, receivables quality, and debt coverage.')+
+  '<div class="row" style="align-items:flex-start"><section class="panel" style="flex:1 1 320px;display:flex;flex-direction:column;align-items:center;gap:8px"><h2 class="ttl" style="align-self:flex-start">Composite Rating</h2>'+
+  '<svg viewBox="0 0 260 160" style="width:100%;max-width:320px;height:auto" role="img" aria-label="Gauge: health score '+sc.total+' out of 100, band '+esc(sc.band)+'"><defs><filter id="g" x="-10%" y="-10%" width="120%" height="130%"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><path d="M30 130 A100 100 0 0 1 230 130" fill="none" stroke="rgba(25,211,243,.14)" stroke-width="18" pathLength="100"/><path d="M30 130 A100 100 0 0 1 230 130" fill="none" stroke="'+col+'" stroke-width="18" pathLength="100" stroke-dasharray="'+sc.total+' 100" filter="url(#g)"/><text x="130" y="114" text-anchor="middle" font-size="54" fill="#D6EEF5">'+sc.total+'</text><text x="130" y="142" text-anchor="middle" font-size="13" letter-spacing="2" fill="#86A9B6">OUT OF 100</text></svg>'+
+  '<span class="chip '+bandClass(sc.band)+'" style="font-size:14px;padding:5px 16px">'+esc(sc.band)+'</span>'+(sc.previous!=null?'<div class="mut">'+(sc.total<sc.previous?'Down ':'Up ')+Math.abs(sc.total-sc.previous)+' points from '+sc.previous+' prior period</div>':'')+
+  '<div style="width:100%;margin-top:12px;display:flex;flex-direction:column;gap:6px">'+bands+'</div></section>'+
+  '<section class="panel" style="flex:2 1 460px"><h2 class="ttl">Sub-Score Factors</h2><p class="mut" style="margin:4px 0 20px">Weighted component breakdown with individual status details</p><div style="display:flex;flex-direction:column;gap:20px">'+subs+'</div></section></div>'+
+  '<section><h2 class="ttl" style="margin-bottom:12px">Key Financial Metrics</h2><div class="row">'+tiles+'</div></section>'+
+  '<section><h2 class="ttl" style="margin-bottom:4px">Primary Score Drivers & Penalties</h2><p class="mut" style="margin-bottom:16px">Transparent breakdown linking each diagnostic adjustment to its underlying ledger metric.</p><div class="row">'+ex+'</div></section>'+
+  '<div><button type="button" class="btn" data-go="warnings">Inspect Risk Alerts<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button></div>';
+}
+
+function loanOptions(D){
+  var s=D.safe_loan_amount,o=[0,100000];
+  if(s!=null){o.push(s);o.push(250000);}else{o.push(250000);o.push(500000);}
+  var u=[];o.sort(function(a,b){return a-b;}).forEach(function(v){if(u.indexOf(v)<0)u.push(v);});
+  return u;
+}
+function renderWarnings(){
+  var D=S.data,g=D.gap,opts=loanOptions(D),sl=D.safe_loan_amount;
+  if(S.loan==null||S.loan>=opts.length)S.loan=sl!=null?opts.indexOf(sl):0;
+  var amt=opts[S.loan],low=g.min_balance+amt,gapTxt=!g.has_gap?'No Deficit':low<0?'Deficit Remains':'Deficit Resolved',gapCls=low<0?'hi':'ok',bufTxt=low>=BUFFER?'Buffer Maintained':'Below Buffer Limit',bufCls=low>=BUFFER?'ok':'md';
+  var cnt={high:0,medium:0,low:0};D.warnings.forEach(function(w){cnt[w.severity]=(cnt[w.severity]||0)+1;});
+  var ws=D.warnings.map(function(w){return '<article class="panel wcard '+esc(w.severity)+'" style="padding:20px 24px"><div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px">'+sevChip(w.severity)+'<span class="num mut" style="font-size:13px">'+esc(w.type)+'</span><span class="num mut" style="margin-left:auto;font-size:13px">'+esc(w.date)+'</span></div><p style="font-size:20px;line-height:1.4">'+esc(w.message)+'</p><div class="act"><span class="lbl">Recommended Action</span><div style="margin-top:4px;font-size:18px">'+esc(w.action)+'</div></div></article>';}).join('');
+  var btns=opts.map(function(v,i){return '<button type="button" class="loan" data-loan="'+i+'" aria-pressed="'+(S.loan===i)+'">'+(v===0?'None':'₹'+(v/100000).toFixed(1)+' L')+'</button>';}).join('');
+  var an=D.anomalies.length?'<div class="scroll"><table><thead><tr><th>type</th><th>severity</th><th>ref_id</th><th>message</th></tr></thead><tbody>'+D.anomalies.map(function(a){return '<tr><td class="num" style="font-size:14px">'+esc(a.type)+'</td><td>'+sevChip(a.severity)+'</td><td class="num" style="font-size:14px">'+esc(a.ref_id)+'</td><td>'+esc(a.message)+'</td></tr>';}).join('')+'</tbody></table></div>':'<p style="padding:0 24px 16px;font-size:18px" class="mut">No ledger discrepancies or anomalies detected across transactions.</p>';
+  $('v-warnings').innerHTML=head(4,'Risk Alerts & Scenario Planning',D.warnings.length+' active risk alert'+(D.warnings.length===1?'':'s')+': '+cnt.high+' high, '+cnt.medium+' medium, '+cnt.low+' low severity. Includes actionable mitigation steps.')+
+  '<div class="row" style="align-items:flex-start"><div style="flex:2 1 520px;display:flex;flex-direction:column;gap:16px;min-width:0">'+ws+'</div>'+
+  '<aside class="panel" style="flex:1 1 320px"><div class="lbl">Scenario Simulator</div><h2 class="ttl" style="margin:8px 0 12px">Recommended Bridge Loan</h2><div class="lbl" style="color:var(--muted)">safe_loan_amount</div><div class="num" style="font-size:38px;margin-top:4px;text-shadow:0 0 14px rgba(25,211,243,.5)">'+(sl!=null?fmtL(sl,1):'None Required')+'</div>'+
+  '<p class="mut" style="margin:6px 0 18px">'+(sl!=null?'Minimum capital injection required to preserve the ₹1.0 L cash safety buffer. Test alternative capital amounts:':'No capital injection is required as the forecast maintains safety buffer compliance. You can test custom loan amounts:')+'</p><div style="display:flex;flex-wrap:wrap;gap:8px">'+btns+'</div>'+
+  '<div style="margin-top:20px;padding:16px;border:1px solid rgba(25,211,243,.3);background:rgba(25,211,243,.05);display:flex;flex-direction:column;gap:12px"><div style="display:flex;justify-content:space-between;gap:12px;align-items:baseline"><span class="mut">Projected Balance Minimum</span><span class="num" style="font-size:22px;color:'+(low<0?'#FF8A84':'var(--fg)')+'">'+fmtL(low)+'</span></div><div style="display:flex;justify-content:space-between;gap:12px;align-items:center"><span class="mut">Liquidity Deficit Status</span><span class="chip '+gapCls+'">'+gapTxt+'</span></div><div style="display:flex;justify-content:space-between;gap:12px;align-items:center"><span class="mut">₹1.0 L Buffer Compliance</span><span class="chip '+bufCls+'">'+bufTxt+'</span></div></div>'+
+  '<p class="mut" style="margin-top:14px;font-size:16px">Note: Repayment amortization and interest rates are excluded from this baseline scenario simulation.</p></aside></div>'+
+  '<section class="panel" style="padding-left:0;padding-right:0;padding-bottom:8px"><div style="padding:0 24px 16px;display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 16px"><h2 class="ttl">Data Integrity & Anomaly Flags</h2><span class="num mut" style="font-size:13px">'+D.anomalies.length+' flagged</span></div>'+an+'</section>'+
+  '<div><button type="button" class="btn ghost" data-go="upload">Return to Data Upload</button></div>';
+}
+
+/* ---------- plumbing ---------- */
+async function loadAwsAnalysis() {
+  const apiUrl = "https://735f6d2xh0.execute-api.eu-north-1.amazonaws.com/analyze";
+
+  try {
+    notice("Loading analysis from AWS...");
+    const response = await fetch(apiUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({})
+    });
+
+    if (!response.ok) {
+      throw new Error("API request failed: " + response.status);
+    }
+
+   const result = await response.json();
+
+if (!result || !result.summary) {
+  throw new Error("AWS response does not contain dashboard data.");
+}
+
+const err = validate(result);
+if (err) {
+  throw new Error("AWS result is not compatible with the dashboard: " + err);
+}
+
+S.data = result;
+S.loaded = "AWS analysis";
+S.sample = -1;
+S.loan = null;
+
+renderAll();
+notice("AWS analysis loaded into dashboard.");
+    notice("Could not load AWS analysis: " + error.message, true);
+    console.error(error);
+  }
+}
+function notice(msg,err){var n=$('notice');if(!msg){n.hidden=true;return;}n.className='notice'+(err?' err':'');n.textContent=msg;n.hidden=false;}
+function renderAll(){renderNav();renderUpload();renderForecast();renderHealth();renderWarnings();}
+function go(v){S.view=v;VIEWS.forEach(function(x){$('v-'+x[0]).hidden=(x[0]!==v);});renderNav();window.scrollTo(0,0);}
+var REQ=['msme_id','as_of','currency','summary','forecast','gap','score','receivables_aging','metrics','explanations','anomalies','warnings','safe_loan_amount'];
+function validate(j){
+  var miss=REQ.filter(function(k){return j==null||j[k]===undefined;});
+  if(miss.length)return 'This JSON is missing: '+miss.join(', ')+'.';
+  if(typeof j.summary.current_balance!=='number'||typeof j.summary.health_score!=='number')return 'summary needs numeric current_balance and health_score.';
+  var F=j.forecast,L=F&&F.dates&&F.dates.length;
+  if(!L||['balance','lower','upper','inflows','outflows'].some(function(k){return !F[k]||F[k].length!==L;}))return 'forecast needs dates, balance, lower, upper, inflows and outflows, all the same length.';
+  if(!j.score.sub_scores||!j.score.band)return 'score needs a band and sub_scores.';
+  if(!j.gap||!Array.isArray(j.gap.causes))return 'gap needs a causes array.';
+  return null;
+}
+function readFile(f){
+  var r=new FileReader();
+  r.onload=function(){
+    var txt=String(r.result);
+    if(/\.json$/i.test(f.name)||f.type==='application/json'){
+      var j;try{j=JSON.parse(txt);}catch(e){notice('Invalid file format: '+e.message,true);return;}
+      var err=validate(j);if(err){notice(err,true);return;}
+      S.data=j;S.loaded=f.name;S.sample=-1;S.loan=null;notice('Successfully loaded '+f.name+'. Open Cash Forecast to view analytics.');renderAll();
+    }else{
+      var lines=txt.split(/\r?\n/).filter(Boolean);
+      if(lines.length<2){notice('Selected CSV file contains no valid data rows.',true);return;}
+      S.previewHead=lines[0].split(',').map(function(s){return s.trim();});
+      S.preview=lines.slice(1,6).map(function(l){return l.split(',').map(function(s){return s.trim();});});
+      S.previewNote=f.name+' · '+(lines.length-1)+' total records · 5 sample rows displayed';
+      notice('Parsed '+(lines.length-1)+' transaction rows from '+f.name+'. Diagnostic forecasting requires model output JSON.');
+      renderUpload();
+    }
+  };
+  r.readAsText(f);
+}
+document.addEventListener('click', async function(e) {
+  var btn = e.target.closest('#aws-test-btn');
+  if (!btn) return;
+
+  btn.disabled = true;
+  btn.textContent = 'Connecting to AWS...';
+
+  try {
+    var response = await fetch(
+      'https://735f6d2xh0.execute-api.eu-north-1.amazonaws.com/analyze',
+      {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({test: true})
+      }
+    );
+
+    var result = await response.json();
+    alert('AWS response:\n' + JSON.stringify(result, null, 2));
+  } catch (error) {
+    alert('Connection failed: ' + error.message +
+      '\nCheck that API Gateway CORS is enabled.');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Test AWS Connection';
+
+});
+document.addEventListener('click',function(e){
+  var t=e.target.closest('[data-go],[data-sample],[data-loan],[data-aws]');if(!t)return;
+  if(t.dataset.go){go(t.dataset.go);return;}
+  if(t.dataset.sample!=null){var i=+t.dataset.sample,m=SAMPLES[i];S.sample=i;S.data=m.payload;S.loaded=m.file;S.preview=m.preview;S.previewHead=['date','type','counterparty','amount_inr','due_date','status'];S.previewNote=m.file+' · '+m.rows.toLocaleString('en-US')+' total records · 5 sample rows displayed';S.loan=null;notice('');renderAll();return;}
+  if(t.dataset.loan!=null){S.loan=+t.dataset.loan;renderWarnings();}
+});
+renderAll();
+var h=(location.hash||'').replace('#','');
+if(['upload','forecast','health','warnings'].indexOf(h)>=0)go(h);else go('upload');
+})();
+</script>
+
+</body></html>

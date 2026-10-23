@@ -1,5 +1,5 @@
 name,type,amount,next_due_date,frequency
-Factory rent,rent,30000,2026-11-01,monthly
-Equipment EMI,emi,25000,2026-11-10,monthly
-Staff payroll,payroll,100000,2026-10-31,monthly
-GST payment,tax,15000,2026-11-15,monthly
+Office rent,rent,35000,2026-11-01,monthly
+Salaries,payroll,70000,2026-10-28,monthly
+Business loan EMI,emi,20000,2026-11-12,monthly
+GST,tax,15000,2026-11-20,monthly

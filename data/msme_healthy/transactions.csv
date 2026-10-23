@@ -1,7 +1,122 @@
 txn_id,date,amount,balance,description,category,counterparty
-h001,2026-10-01,250000,350000,Customer payment,credit,ABC Retail
-h002,2026-10-03,-80000,270000,Raw materials,debit,Steel Supplier
-h003,2026-10-06,120000,390000,Customer payment,credit,XYZ Stores
-h004,2026-10-10,-45000,345000,Electricity bill,debit,Power Company
-h005,2026-10-15,95000,440000,Customer payment,credit,LMN Traders
-h006,2026-10-20,-150000,290000,Payroll,debit,Employees
+TXN-0001,2026-07-27,-1990.0,399340.0,Utility bill,utilities,BESCOM
+TXN-0002,2026-07-28,-70000.0,329340.0,Salary payout,payroll,Payroll
+TXN-0003,2026-07-28,-3900.0,325440.0,Raw material purchase,supplies,Sri Traders
+TXN-0004,2026-07-29,-1270.0,324170.0,Utility bill,utilities,Airtel
+TXN-0005,2026-07-29,-310.0,323860.0,Misc expense,misc,Office Mart
+TXN-0006,2026-07-30,-300.0,323560.0,Misc expense,misc,Office Mart
+TXN-0007,2026-07-30,-2460.0,321100.0,Utility bill,utilities,BESCOM
+TXN-0008,2026-07-31,-290.0,320810.0,Misc expense,misc,Office Mart
+TXN-0009,2026-07-31,-4890.0,315920.0,Raw material purchase,supplies,Sri Traders
+TXN-0010,2026-08-01,-35000.0,280920.0,Office rent,rent,Landlord
+TXN-0011,2026-08-01,-380.0,280540.0,Misc expense,misc,Office Mart
+TXN-0012,2026-08-03,-1850.0,278690.0,Freight / transport,transport,SpeedLogistics
+TXN-0013,2026-08-03,-5020.0,273670.0,Raw material purchase,supplies,Kaveri Agencies
+TXN-0014,2026-08-04,-850.0,272820.0,Freight / transport,transport,SpeedLogistics
+TXN-0015,2026-08-05,-5220.0,267600.0,Raw material purchase,supplies,Metro Supplies
+TXN-0016,2026-08-05,-990.0,266610.0,Misc expense,misc,Tea & Snacks
+TXN-0017,2026-08-06,-590.0,266020.0,Misc expense,misc,Office Mart
+TXN-0018,2026-08-06,-2600.0,263420.0,Utility bill,utilities,BESCOM
+TXN-0019,2026-08-07,-1770.0,261650.0,Freight / transport,transport,Local Tempo
+TXN-0020,2026-08-08,-520.0,261130.0,Misc expense,misc,Office Mart
+TXN-0021,2026-08-08,-4660.0,256470.0,Raw material purchase,supplies,Sri Traders
+TXN-0022,2026-08-10,-3070.0,253400.0,Utility bill,utilities,Airtel
+TXN-0023,2026-08-11,-5980.0,247420.0,Raw material purchase,supplies,Kaveri Agencies
+TXN-0024,2026-08-12,-20000.0,227420.0,Loan EMI,loan_emi,HDFC Bank
+TXN-0025,2026-08-12,-2140.0,225280.0,Freight / transport,transport,Local Tempo
+TXN-0026,2026-08-13,-320.0,224960.0,Misc expense,misc,Office Mart
+TXN-0027,2026-08-13,-1660.0,223300.0,Freight / transport,transport,SpeedLogistics
+TXN-0028,2026-08-14,-2040.0,221260.0,Freight / transport,transport,Local Tempo
+TXN-0029,2026-08-15,-1090.0,220170.0,Misc expense,misc,Tea & Snacks
+TXN-0030,2026-08-17,-580.0,219590.0,Misc expense,misc,Office Mart
+TXN-0031,2026-08-18,-3130.0,216460.0,Raw material purchase,supplies,Metro Supplies
+TXN-0032,2026-08-19,-2000.0,214460.0,Utility bill,utilities,Airtel
+TXN-0033,2026-08-20,-15000.0,199460.0,GST payment,tax,GST Portal
+TXN-0034,2026-08-20,-2100.0,197360.0,Utility bill,utilities,Airtel
+TXN-0035,2026-08-21,-1070.0,196290.0,Misc expense,misc,Tea & Snacks
+TXN-0036,2026-08-22,-1190.0,195100.0,Misc expense,misc,Tea & Snacks
+TXN-0037,2026-08-22,-1500.0,193600.0,Utility bill,utilities,BESCOM
+TXN-0038,2026-08-24,-2520.0,191080.0,Utility bill,utilities,BESCOM
+TXN-0039,2026-08-25,128000.0,319080.0,NEFT from Client A (INV-1001),sales,Client A
+TXN-0040,2026-08-25,-1730.0,317350.0,Utility bill,utilities,BESCOM
+TXN-0041,2026-08-26,-750.0,316600.0,Misc expense,misc,Tea & Snacks
+TXN-0042,2026-08-27,-4370.0,312230.0,Raw material purchase,supplies,Kaveri Agencies
+TXN-0043,2026-08-28,-70000.0,242230.0,Salary payout,payroll,Payroll
+TXN-0044,2026-08-28,-620.0,241610.0,Misc expense,misc,Tea & Snacks
+TXN-0045,2026-08-28,-4500.0,237110.0,Raw material purchase,supplies,Metro Supplies
+TXN-0046,2026-08-29,-1330.0,235780.0,Utility bill,utilities,BESCOM
+TXN-0047,2026-08-31,112000.0,347780.0,NEFT from Client B (INV-1004),sales,Client B
+TXN-0048,2026-08-31,-1420.0,346360.0,Utility bill,utilities,BESCOM
+TXN-0049,2026-09-01,-35000.0,311360.0,Office rent,rent,Landlord
+TXN-0050,2026-09-01,-4950.0,306410.0,Raw material purchase,supplies,Kaveri Agencies
+TXN-0051,2026-09-02,-1970.0,304440.0,Freight / transport,transport,SpeedLogistics
+TXN-0052,2026-09-03,-380.0,304060.0,Misc expense,misc,Tea & Snacks
+TXN-0053,2026-09-04,-1670.0,302390.0,Freight / transport,transport,SpeedLogistics
+TXN-0054,2026-09-05,-700.0,301690.0,Misc expense,misc,Tea & Snacks
+TXN-0055,2026-09-06,104000.0,405690.0,NEFT from Client C (INV-1007),sales,Client C
+TXN-0056,2026-09-07,-1400.0,404290.0,Utility bill,utilities,Airtel
+TXN-0057,2026-09-08,-1680.0,402610.0,Freight / transport,transport,SpeedLogistics
+TXN-0058,2026-09-08,-3070.0,399540.0,Raw material purchase,supplies,Kaveri Agencies
+TXN-0059,2026-09-09,-2580.0,396960.0,Utility bill,utilities,BESCOM
+TXN-0060,2026-09-10,-2750.0,394210.0,Freight / transport,transport,SpeedLogistics
+TXN-0061,2026-09-10,-1760.0,392450.0,Freight / transport,transport,SpeedLogistics
+TXN-0062,2026-09-11,-2270.0,390180.0,Utility bill,utilities,Airtel
+TXN-0063,2026-09-12,-20000.0,370180.0,Loan EMI,loan_emi,HDFC Bank
+TXN-0064,2026-09-12,-2430.0,367750.0,Utility bill,utilities,BESCOM
+TXN-0065,2026-09-12,-2840.0,364910.0,Utility bill,utilities,BESCOM
+TXN-0066,2026-09-13,96000.0,460910.0,NEFT from Client D (INV-1010),sales,Client D
+TXN-0067,2026-09-14,-600.0,460310.0,Misc expense,misc,Office Mart
+TXN-0068,2026-09-15,-1690.0,458620.0,Freight / transport,transport,SpeedLogistics
+TXN-0069,2026-09-16,-1610.0,457010.0,Freight / transport,transport,Local Tempo
+TXN-0070,2026-09-16,-810.0,456200.0,Freight / transport,transport,SpeedLogistics
+TXN-0071,2026-09-17,-430.0,455770.0,Misc expense,misc,Office Mart
+TXN-0072,2026-09-18,-4490.0,451280.0,Raw material purchase,supplies,Kaveri Agencies
+TXN-0073,2026-09-19,-6340.0,444940.0,Raw material purchase,supplies,Sri Traders
+TXN-0074,2026-09-20,-15000.0,429940.0,GST payment,tax,GST Portal
+TXN-0075,2026-09-21,-2160.0,427780.0,Utility bill,utilities,BESCOM
+TXN-0076,2026-09-22,-830.0,426950.0,Freight / transport,transport,Local Tempo
+TXN-0077,2026-09-23,136000.0,562950.0,NEFT from Client A (INV-1002),sales,Client A
+TXN-0078,2026-09-23,-950.0,562000.0,Misc expense,misc,Office Mart
+TXN-0079,2026-09-24,-1540.0,560460.0,Utility bill,utilities,BESCOM
+TXN-0080,2026-09-24,-2790.0,557670.0,Raw material purchase,supplies,Metro Supplies
+TXN-0081,2026-09-25,-2420.0,555250.0,Utility bill,utilities,Airtel
+TXN-0082,2026-09-25,-980.0,554270.0,Freight / transport,transport,SpeedLogistics
+TXN-0083,2026-09-26,-6160.0,548110.0,Raw material purchase,supplies,Kaveri Agencies
+TXN-0084,2026-09-28,-70000.0,478110.0,Salary payout,payroll,Payroll
+TXN-0085,2026-09-28,-4740.0,473370.0,Raw material purchase,supplies,Sri Traders
+TXN-0086,2026-09-28,-1190.0,472180.0,Misc expense,misc,Office Mart
+TXN-0087,2026-09-29,115000.0,587180.0,NEFT from Client B (INV-1005),sales,Client B
+TXN-0088,2026-09-29,-3310.0,583870.0,Raw material purchase,supplies,Metro Supplies
+TXN-0089,2026-09-30,-2730.0,581140.0,Utility bill,utilities,Airtel
+TXN-0090,2026-09-30,-1820.0,579320.0,Freight / transport,transport,SpeedLogistics
+TXN-0091,2026-10-01,-35000.0,544320.0,Office rent,rent,Landlord
+TXN-0092,2026-10-01,-2580.0,541740.0,Freight / transport,transport,Local Tempo
+TXN-0093,2026-10-02,-2260.0,539480.0,Utility bill,utilities,BESCOM
+TXN-0094,2026-10-02,-990.0,538490.0,Misc expense,misc,Office Mart
+TXN-0095,2026-10-03,-1480.0,537010.0,Utility bill,utilities,BESCOM
+TXN-0096,2026-10-05,109000.0,646010.0,NEFT from Client C (INV-1008),sales,Client C
+TXN-0097,2026-10-05,-3700.0,642310.0,Raw material purchase,supplies,Kaveri Agencies
+TXN-0098,2026-10-05,-1000.0,641310.0,Misc expense,misc,Office Mart
+TXN-0099,2026-10-06,-3290.0,638020.0,Raw material purchase,supplies,Metro Supplies
+TXN-0100,2026-10-06,-6020.0,632000.0,Raw material purchase,supplies,Kaveri Agencies
+TXN-0101,2026-10-07,-5950.0,626050.0,Raw material purchase,supplies,Sri Traders
+TXN-0102,2026-10-08,-1960.0,624090.0,Freight / transport,transport,SpeedLogistics
+TXN-0103,2026-10-09,-1620.0,622470.0,Freight / transport,transport,Local Tempo
+TXN-0104,2026-10-09,-2600.0,619870.0,Utility bill,utilities,Airtel
+TXN-0105,2026-10-10,-2880.0,616990.0,Utility bill,utilities,BESCOM
+TXN-0106,2026-10-10,-360.0,616630.0,Misc expense,misc,Tea & Snacks
+TXN-0107,2026-10-12,-20000.0,596630.0,Loan EMI,loan_emi,HDFC Bank
+TXN-0108,2026-10-12,-5490.0,591140.0,Raw material purchase,supplies,Metro Supplies
+TXN-0109,2026-10-13,-2540.0,588600.0,Utility bill,utilities,BESCOM
+TXN-0110,2026-10-14,99000.0,687600.0,NEFT from Client D (INV-1011),sales,Client D
+TXN-0111,2026-10-14,-950.0,686650.0,Freight / transport,transport,SpeedLogistics
+TXN-0112,2026-10-15,-2690.0,683960.0,Utility bill,utilities,BESCOM
+TXN-0113,2026-10-16,-400.0,683560.0,Misc expense,misc,Office Mart
+TXN-0114,2026-10-17,-1200.0,682360.0,Misc expense,misc,Tea & Snacks
+TXN-0115,2026-10-19,-430.0,681930.0,Misc expense,misc,Tea & Snacks
+TXN-0116,2026-10-20,-15000.0,666930.0,GST payment,tax,GST Portal
+TXN-0117,2026-10-20,-680.0,666250.0,Freight / transport,transport,Local Tempo
+TXN-0118,2026-10-21,-4000.0,662250.0,Raw material purchase,supplies,Kaveri Agencies
+TXN-0119,2026-10-22,-1750.0,660500.0,Freight / transport,transport,SpeedLogistics
+TXN-0120,2026-10-22,-7120.0,653380.0,Raw material purchase,supplies,Sri Traders
+TXN-0121,2026-10-23,-3380.0,650000.0,Raw material purchase,supplies,Sri Traders
