@@ -285,7 +285,7 @@ function renderUpload() {
       '<input type="file" id="obligations-file" accept=".csv,text/csv" style="max-width:100%">' +
 
       '<button type="button" class="btn" id="analyze-files">Analyze Financial Data</button>' +
-      '<p class="mut" style="font-size:13px;margin:0">For this local prototype, files are sent to your Flask backend at 127.0.0.1:5000.</p>' +
+      '<p class="mut" style="font-size:13px;margin:0"> Files are securely processed by the MSME Cash-Flow Warning backend.</p>' +
     '</div>' +
 
     
@@ -427,7 +427,7 @@ function renderUpload() {
     analyzeBtn.textContent = 'Analyzing...';
     notice('Sending records to the Python ML pipeline...', false);
 
-    fetch('http://127.0.0.1:5000/api/analyze', {
+    fetch('/api/analyze', {
       method: 'POST',
       body: form
     })

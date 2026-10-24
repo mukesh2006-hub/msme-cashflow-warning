@@ -3,7 +3,7 @@ import os
 import tempfile
 from pathlib import Path
 
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request , send_from_directory
 from flask_cors import CORS
 
 from ml import run_analysis
@@ -12,6 +12,12 @@ ROOT = Path(__file__).resolve().parent
 DATA_DIR = ROOT / "data"
 
 app = Flask(__name__)
+@app.get("/")
+def home():
+    return send_from_directory(
+        str(ROOT / "app"),
+        "app.html"
+    )
 
 # Allow the frontend running through VS Code Live Server.
 CORS(
@@ -118,7 +124,7 @@ def analyze():
 
 if __name__ == "__main__":
     app.run(
-        host="127.0.0.1",
-        port=5000,
-        debug=True,
+        host="0.0.0.0",
+        port=int(os.environ.get("PORT", 5000)),
+        debug=False,
     )
